@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -e -x
 
 RUN_DIR=/var/vcap/sys/run/rubyweb
@@ -6,31 +8,33 @@ PIDFILE=${RUN_DIR}/pid
 
 case $1 in
 
-  start)
-    mkdir -p $RUN_DIR $LOG_DIR
-    chown -R vcap:vcap $RUN_DIR $LOG_DIR
+start)
+  mkdir -p $RUN_DIR $LOG_DIR
+  chown -R vcap:vcap $RUN_DIR $LOG_DIR
 
-    echo $$ > $PIDFILE
+  echo $$ > $PIDFILE
 
-    cd /var/vcap/packages/rubyweb
+  cd /var/vcap/packages/rubyweb
 
-    source /var/vcap/packages/ruby-2.7/bosh/runtime.env
-    
-    <%= 
-    
-      start_file = p('bootstrap')
-      if not start_file.empty?
-        raise 'No bootstrap file provided'
-      end
+  source /var/vcap/packages/ruby-2.7/bosh/runtime.env
 
-    %>
-    bundle exec ruby <%= start_file unless start_file.eql? "app.rb" %> \
-      >>  $LOG_DIR/rubyweb.stdout.log \
-      2>> $LOG_DIR/rubyweb.stderr.log
-    ;;
+  <%=
+    start_file = p('bootstrap')
+    if start_file.empty?
+      raise 'No bootstrap file provided'
+    elsif !start_file.eql?("app.rb")
+      raise 'Wrong bootstrap file provided'
+    end
+  %>
 
-  *)
-    echo "Usage: ctl {start|stop}"
-
+  bundle exec ruby <%= start_file %> \
+    >>  $LOG_DIR/rubyweb.stdout.log \
+    2>> $LOG_DIR/rubyweb.stderr.log
+  ;;
+stop)
+  kill -9 `cat $PIDFILE`
+  ;;
+*)
+  echo "Usage: ctl {start|stop}"
+  ;;
 esac
-

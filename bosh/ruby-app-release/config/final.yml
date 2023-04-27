@@ -1,3 +1,4 @@
+name: ruby
 blobstore:
   provider: local
   options:
