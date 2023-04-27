@@ -9,7 +9,6 @@ def prepare_auth_token
   File.foreach('config/.access') do |line|
     creds.append(line.split('=').last.strip)
   end
-
   Base64.encode64(creds.join(':'))
 end
 
